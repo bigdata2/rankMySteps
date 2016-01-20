@@ -30,7 +30,10 @@ class Consumer(object):
         aws_access_key = os.getenv('AWS_ACCESS_KEY_ID', 'default')
         aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY', 'default')
         s3_client = boto3.client('s3')
-        s3_client.upload_file("/home/ubuntu/rankMyStep/kafka/"+file_name, mybucket,file_name)
+        s3_client.upload_file("/home/ubuntu/rankMyStep/kafka/"+file_name, 
+                              mybucket,"rankmysteps/"+file_name)
+        #os.remove("/home/ubuntu/rankMyStep/kafka/"+file_name)
+        #s3_client.download_file(mybucket, 'hello.txt', 'hello2.txt')
 
 if __name__ == "__main__":
     args = sys.argv
