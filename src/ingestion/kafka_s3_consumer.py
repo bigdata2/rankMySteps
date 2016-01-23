@@ -32,8 +32,7 @@ class Consumer(object):
         s3_client = boto3.client('s3')
         s3_client.upload_file("/home/ubuntu/rankMyStep/kafka/"+file_name, 
                               mybucket,"rankmysteps/"+file_name)
-        #os.remove("/home/ubuntu/rankMyStep/kafka/"+file_name)
-        #s3_client.download_file(mybucket, 'hello.txt', 'hello2.txt')
+        os.remove("/home/ubuntu/rankMyStep/kafka/"+file_name)
 
 if __name__ == "__main__":
     args = sys.argv
