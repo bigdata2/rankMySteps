@@ -13,6 +13,7 @@ from operator import add
 if __name__ == "__main__":
     sc = SparkContext(appName="rankmysteps")
     ssc = StreamingContext(sc, 1)
+    ssc.checkpoint("checkpoint")
 
     zkQuorum = "52.88.57.240:2181" 
     topic = "steps_data_part4"
@@ -36,6 +37,14 @@ if __name__ == "__main__":
             
             session.execute(prepared_write_query, (uuid, steps))
 
+    def updateFunc(new_value, last_state):
+        if last_state is None:
+            last_state = new_value
+            return last_state
+        else:
+            total_steps = add_steps(new_value,last_state)
+            return total_steps
+
     def add_steps(v1,v2):
         total_steps = v1[0] + v2[0]
         date1 = (datetime.datetime.strptime(v1[1], '%Y-%m-%d %H:%M:%S') -    
@@ -45,13 +54,19 @@ if __name__ == "__main__":
         latest_date = v1[1] if (date1 > date2) else v2[1]
         return (total_steps, latest_date)
 
-    def process(rdd):
-        users = rdd.map(lambda l: Row(uuid=json.loads(l)["uuid"],
-                          steps=json.loads(l)["steps"], timestamp=json.loads(l)["timestamp"]))
-        aggregated_steps = users.map(lambda u: (u[2],(u[0],u[1]))).reduceByKey(add_steps).collect()
-        for (uuid, (steps, date)) in aggregated_steps:
-             print("%s: %s %s"% (uuid, steps, date))
+    def print_users(rdd):
+	for (uuid, [(steps,time)]) in rdd.collect():
+                print("user: %s steps taken: %s time: %s"% (uuid, steps, time))
+
         
-    lines.foreachRDD(process)
+    running_count = lines.map(lambda l: Row(uuid=json.loads(l)["uuid"],
+                              steps=json.loads(l)["steps"], 
+                              timestamp=json.loads(l)["timestamp"]))\
+                         .map(lambda u: (u[2],(u[0],u[1])))\
+                         .reduceByKey(add_steps)\
+                         .updateStateByKey(updateFunc)
+
+    running_count.foreachRDD(print_users)
+
     ssc.start()
     ssc.awaitTermination()
