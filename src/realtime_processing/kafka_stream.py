@@ -7,10 +7,11 @@ from pyspark.sql import SQLContext, Row
 from pyspark.sql.types import *
 from cassandra.cluster import Cluster
 from cassandra import ConsistencyLevel
-from datetime import datetime
+import datetime
 from operator import add
 
 if __name__ == "__main__":
+
     sc = SparkContext(appName="rankmysteps")
     ssc = StreamingContext(sc, 1)
     ssc.checkpoint("checkpoint")
@@ -20,23 +21,6 @@ if __name__ == "__main__":
     kvs = KafkaUtils.createStream(ssc, zkQuorum, "spark-streaming-consumer", {topic: 1})
     lines = kvs.map(lambda x: x[1])
     
-    def write_into_cassandra(record) :
-        from cassandra.cluster import Cluster
-        from cassandra import ConsistencyLevel
-
-        # connect to cassandra
-        cluster = Cluster(['ec2-52-35-237-159.us-west-2.compute.amazonaws.com'])
-        session = cluster.connect("ranksteps") 
-        prepared_write_query = session.prepare("INSERT INTO step_count2 (uuid, step_cnt) VALUES (?,?)") 
-        for i in record:
-            print (i)
-            json_str = json.loads(i) 
-            print (json_str)
-            uuid = str(json_str["uuid"])  
-            steps = str(json_str["steps"])  
-            
-            session.execute(prepared_write_query, (uuid, steps))
-
     def updateFunc(new_value, last_state):
         if last_state is None:
             last_state = new_value
@@ -58,6 +42,18 @@ if __name__ == "__main__":
 	for (uuid, [(steps,time)]) in rdd.collect():
                 print("user: %s steps taken: %s time: %s"% (uuid, steps, time))
 
+    def write_into_cassandra(record):
+        # connect to cassandra
+        cluster = Cluster(['ec2-52-35-237-159.us-west-2.compute.amazonaws.com'])
+        session = cluster.connect("ranksteps") 
+        prepared_write_query = session.prepare("INSERT INTO top_walkers "\
+                                               "(user, num_steps, "\
+                                               "arrival_time) VALUES (?,?,?)")
+	for (uuid, [(steps,time)]) in record:
+                print("user: %s steps taken: %s time: %s"% (uuid, steps, time))
+                dt = datetime.datetime.strptime(time, '%Y-%m-%d %H:%M:%S')
+                session.execute(prepared_write_query, (str(uuid), steps, dt))
+
         
     running_count = lines.map(lambda l: Row(uuid=json.loads(l)["uuid"],
                               steps=json.loads(l)["steps"], 
@@ -66,7 +62,10 @@ if __name__ == "__main__":
                          .reduceByKey(add_steps)\
                          .updateStateByKey(updateFunc)
 
-    running_count.foreachRDD(print_users)
+    #running_count.foreachRDD(print_users) #for debugging 
+    running_count.foreachRDD(lambda rdd: \
+                             rdd.foreachPartition(lambda record: \
+                                                  write_into_cassandra(record)))
 
     ssc.start()
     ssc.awaitTermination()
