@@ -2,6 +2,8 @@ import random
 import sys
 import six
 import json
+import pytz
+from pytz import timezone
 from datetime import datetime
 from kafka.client import KafkaClient
 from kafka.producer import KeyedProducer
@@ -22,12 +24,13 @@ class Producer(object):
             stop_uuid =  (int(source_symbol) * self.max_users_each_thread) - 1
             uuid = random.sample(range(start_uuid,stop_uuid), 300000)
             for uid in uuid:
-                timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                timestamp = datetime.now(timezone('US/Pacific')).strftime('%Y-%m-%d %H:%M:%S')
                 steps = random.randint(1,1000)
                 json_msg= {'source':source_symbol,'uuid':uid, 
                            'timestamp':timestamp, 'steps': steps}
                 json_encoded = json.dumps(json_msg)
                 self.producer.send_messages('steps_data_part4', source_symbol, json_encoded)
+                print json_encoded
                 msg_cnt += 1
 
 if __name__ == "__main__":
