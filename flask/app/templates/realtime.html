@@ -1,0 +1,52 @@
+<html>
+<a href="http://www.slideshare.net/AnuragTiwariPhDPMP/rank-mysteps-demo">Application Description</a>
+<body>
+  <p id="title">Top Walkers</p>
+  <table id="example" class="display" cellspacing="0" width="100%">
+<thead>
+          <tr>
+                <th>User Id</th>
+                <th>Steps Taken</th>
+          </tr>
+  </thead>
+   </table>
+</body>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js">
+</script>
+<script src="http://code.jquery.com/jquery-1.12.0.min.js">
+</script>
+<script src="http://cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js">
+</script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css">
+  
+
+<script>
+
+
+    var table = $('#example').DataTable( {
+        order: [[ 1, "desc" ]],
+        columns: [
+            { "data": "userid " },
+            { "data": "steps_taken" }
+        ]
+    } );
+
+function table1() {
+   var topWalkersAPI = "/api" 
+            $.ajax({
+                url:topWalkersAPI,
+                success: function(data) {
+                    myRecords = $.parseJSON(data);
+                    console.log(myRecords)
+                    table.clear().rows.add(myRecords).draw();
+                }
+            });
+
+}
+$(function () {
+    setInterval(table1,2000);
+});
+
+</script>
+</html>
