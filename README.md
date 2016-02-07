@@ -21,7 +21,7 @@ Four of the eight instances are dedicated to Kafka brokers and the other four co
 
 #### Data Pipeline Description
 
-Six producer scripts produce JSON messages that contain a unique uuid, timestamp when message was generated and number of steps taken by the user. The uuid and number of steps are generated using a pseudorandom generator.
+Six producer scripts produce JSON messages that contain a unique uuid, timestamp when message was generated and number of steps taken by the user. The uuid and number of steps (between 1-10) are generated using a pseudorandom generator. The pipeline has been tested with over million users but for the purpose of demo, the number of users have been limited to seventy two thousand.
 
 ![alt text](https://github.com/bigdata2/rankMySteps/blob/master/images/data.png "JSON messages")
 
@@ -33,3 +33,16 @@ The schema and materialized view in Cassandra are explained below:
 
 ![alt text](https://github.com/bigdata2/rankMySteps/blob/master/images/schema.png "Cassandra Schema")
 
+#### Challanges with Data Denormalization and Materialized Views (MV) in Cassandra 3.0
+Initially I developed this app with two tables. The first table was used as a key value store and the second table was used for clustering based on date to sort on total number of steps taken by the users. I used Cassandra 2.2 for that solution. Since the Primary Key (PK) for the second table had the number of steps as a component, there were several entries for some users. For example, a user who is walking/running and is continuously trasmitting data every second will have several more entries than a user who trasmits data once every several hours.
+This issue caused finding top-N walkers challanging. I initially took top hundred thousand entries from the second table and removed duplicate entries for a user in the application. However, even with duplicates removed, in the worst case, a very active user can potentially take up most of the top hundred thousand entries. To overcome this problem I tried to delete the entries from the second table based on the values read from the first table. However, I found that when running the pipeline with approximately 5000 messages per second, some records were not getting deleted from the second table. That caused the first and second table in inconsistent state.  
+
+Upon researching this problem I stumbled upon batch updates and materialized views in Cassandra. The latter is only available in Cassandra 3.0 and above. I chose to use materialized view for this project and have summarized its salient points below:
+
+- Eliminate the need of data denormalization by developers -- No need to create multiple tables for different queries.
+
+- Can be queried as any Cassandra table.
+
+- Persistent view — NOT an SQL view.
+
+- Automatic propagation of updates from the base table to MV ensuring eventual consistency.
