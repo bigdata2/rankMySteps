@@ -53,9 +53,11 @@ if __name__ == "__main__":
         write_query_walker_steps = session.prepare("INSERT INTO walkers_steps"\
                                                "(user, num_steps, "\
                                                "arrival_time) VALUES (?,?,?)")
+        write_query_walker_steps.consistency_level = ConsistencyLevel.QUORUM
         read_query = session.prepare("SELECT user, num_steps FROM "\
                                      "walkers_steps WHERE"\
                                      " user = ? and arrival_time = ?")
+        read_query.consistency_level = ConsistencyLevel.QUORUM
 	for (uuid, (steps,time)) in record:
                 dt = datetime.datetime.strptime(time, '%Y-%m-%d %H:%M:%S')
                 rows = session.execute(read_query,(uuid,dt.strftime('%Y-%m-%d')))
