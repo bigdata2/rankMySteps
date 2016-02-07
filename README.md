@@ -22,3 +22,5 @@ Four of the eight instances are dedicated to Kafka brokers and the other four co
 #### Data Pipeline Description
 
 Six producer scripts produce JSON messages that contain a unique uuid, timestamp when message was generated and number of steps taken by the user. 
+
+![alt text](https://github.com/bigdata2/rankMySteps/blob/master/images/data.png "JSON messages")
