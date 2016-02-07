@@ -27,9 +27,9 @@ Six producer scripts produce JSON messages that contain a unique uuid, timestamp
 
 The data from producer scripts flow into four partition single topic kafka queue. The output of Kafka connects to S3 which is the source of truth in this pipeline and in future will be used for batch processing. Spark Streaming gets data from Kafka through a direct connection. Spark streaming aggregates data into the microbatch and assign the latest timestamp to the aggregated messages. The data for a uuid is then read from Cassandra and written back into it. A materialized view is created from the data written in Cassandra to sort the data stored.
 
-![alt text](https://github.com/bigdata2/rankMySteps/blob/master/images/data.png "Data Pipeline")
+![alt text](https://github.com/bigdata2/rankMySteps/blob/master/images/pipeline.png "Data Pipeline")
 
 The schema and materialized view in Cassandra are explained below:
 
-![alt text](https://github.com/bigdata2/rankMySteps/blob/master/images/data.png "Cassandra Schema")
-https://github.com/bigdata2/rankMySteps/blob/master/images/schema.png
+![alt text](https://github.com/bigdata2/rankMySteps/blob/master/images/schema.png "Cassandra Schema")
+
