@@ -20,6 +20,7 @@ def getSqlContextInstance(sparkContext):
 if __name__ == "__main__":
 
     conf = SparkConf().setAppName("rankmysteps")
+    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     sc = SparkContext(conf=conf)
     ssc = StreamingContext(sc, 2)
 
