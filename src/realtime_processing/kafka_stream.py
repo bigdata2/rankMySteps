@@ -22,7 +22,7 @@ if __name__ == "__main__":
     conf = SparkConf().setAppName("rankmysteps")
     conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     sc = SparkContext(conf=conf)
-    ssc = StreamingContext(sc, 2)
+    ssc = StreamingContext(sc, 19)
 
     zkQuorum = "52.88.57.240:2181" 
     topic = "steps_data_part4"
