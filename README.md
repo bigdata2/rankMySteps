@@ -6,7 +6,8 @@
 This app was inspired by fitbit and jawbone like wearables that count the number of steps taken by the users and periodically send the total back to the application.
 I wanted to create a list of top-n users for each day so that the users can see how far behind or ahead they are compared to other users of the app and challenge themselves.
 
-See a presentation of this app [here](http://rankmysteps.xyz)
+The live demo is no longer available since the AWS instance have been taken down. Please refer to slides for the overview of project.
+See a presentation of this app [here](http://www.slideshare.net/AnuragTiwariPhDPMP/rank-mysteps-demo)
 
 #### Infrastructure
 
